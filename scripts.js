@@ -149,7 +149,7 @@ db.vendas.insertMany([
 
 db.filmes.aggregate([{$match:{duracao_min:{$gte:100}}}])
 
-//31. ADDTOSET 
+
 //25. UPDATE --- COLOCANDO ANO DE LANÇAMENTO NOS FILMES
 db.filmes.updateOne(
     { titulo: "A Vingança do NoSQL" },
@@ -252,7 +252,7 @@ db.sessoes.aggregate([
 
 
 
-//8.GROUP 11.MAX -- MAIOR PREÇO POR INGRESS
+//8.GROUP 11.MAX -- MAIOR PREÇO POR INGRESSO
 db.ingressos.aggregate([
     {
     $group: {
@@ -311,8 +311,6 @@ db.filmes.updateOne(
   );
 
 
-
-
 //24. FILTER  - Listar apenas os assentos disponíveis 
 db.salas.aggregate([
     {
@@ -348,7 +346,7 @@ db.filmes.aggregate([
 ]).toArray();  
 
 
-//29.LOOKUP
+//29.LOOKUP -- juntar informaçoes da sessão, filme e sala 
 db.sessoes.aggregate([
     {
       $lookup: {
