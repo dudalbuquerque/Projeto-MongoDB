@@ -43,7 +43,27 @@ db.filmes.insertMany([
     generos: ["Documentário", "Tecnologia"],
     duracao_min: 110,
     sinopse: "Uma análise profunda sobre a otimização de consultas e a importância dos índices."
+  },
+
+  {
+    _id: ObjectId("66ba3a79f8d488390c5fe3a3"),
+    titulo: "A Lenda dos SGBDS",
+    diretor: "Waléria Tymes",
+    generos: ["Cinebiografia", "Histórias Reais"],
+    duracao_min: 90,
+    sinopse: "A história da Lenda dos Sistemas de Gerenciamento de Banco de Dados."
+  },
+
+  {
+    _id: ObjectId("66ba3a79f8d488390c5fe3a4"),
+    titulo: "Sem Espaço para Dados",
+    diretor: "Tarantina",
+    generos: ["Terror", "Suspense"],
+    duracao_min: 80,
+    em_cartaz: true,
+    sinopse: "Uma jornada assustadora em um mundo onde os dados têm valor."
   }
+
 ]);
 
 // Salas
@@ -63,6 +83,14 @@ db.salas.insertMany([
     em_manutencao: true,
     historico_manutencao: [{ data_inicio: new Date(), motivo: "Projetor quebrado" }]
   }
+
+  {
+    _id: ObjectId("66ba3a79f8d488390c5fe3b2"),
+    numero_sala: 3,
+    capacidade: 100,
+    recursos: ["IMAX", "Som Dolby Atmos"],
+    assentos: [{ id: "B1", status: "disponivel" }, { id: "B2", status: "disponivel" }, {id: "B3", status: "disponivel" }],
+  }
 ]);
 
 // Sessões
@@ -80,6 +108,14 @@ db.sessoes.insertMany([
     id_sala: ObjectId("66ba3a79f8d488390c5fe3b0"),  // Sala 1
     horario_inicio: new Date("2025-08-12T21:30:00Z"),
     preco_ingresso: 30.00
+  },
+
+  {
+    _id: ObjectId("66ba3a79f8d488390c5fe3c2"),
+    id_filme: ObjectId("66ba3a79f8d488390c5fe3a4"), // Sem Espaço para Dados
+    id_sala: ObjectId("66ba3a79f8d488390c5fe3b3"),  // Sala 3
+    horario_inicio: new Date("2025-08-13T18:00:00Z"),
+    preco_ingresso: 40.00
   }
 ]);
 
@@ -96,7 +132,16 @@ db.vendas.insertMany([
     assentos_comprados: ["B5"],
     valor_total: 30.00,
     data_venda: new Date()
+  },
+
+  {
+    id_sessao: ObjectId("66ba3a79f8d488390c5fe3c2"),
+    assentos_comprados: ["C1", "C2", "C3"],
+    valor_total: 120.00,
+    data_venda: new Date()
   }
+
+
 ]);
 
 print("======== CARGA INICIAL CONCLUÍDA ========");
