@@ -82,7 +82,7 @@ db.salas.insertMany([
     recursos: ["4K"],
     em_manutencao: true,
     historico_manutencao: [{ data_inicio: new Date(), motivo: "Projetor quebrado" }]
-  }
+  },
 
   {
     _id: ObjectId("66ba3a79f8d488390c5fe3b2"),
