@@ -70,7 +70,7 @@ db.salas.insertMany([
     numero_sala: 1,
     capacidade: 150,
     recursos: ["3D", "Som Dolby Atmos"],
-    assentos: [{ id: "A1", status: "disponivel" }, { id: "A2", status: "disponivel" }]
+    assentos: [{ id: "A1", status: "indisponivel" }, { id: "A2", status: "indisponivel" },{ id: "A3", status: "disponivel" },{ id: "A4", status: "disponivel" },{ id: "A5", status: "disponivel" }]
   },
   {
     _id: ObjectId("66ba3a79f8d488390c5fe3b1"),
@@ -86,7 +86,7 @@ db.salas.insertMany([
     numero_sala: 3,
     capacidade: 100,
     recursos: ["IMAX", "Som Dolby Atmos"],
-    assentos: [{ id: "B1", status: "disponivel" }, { id: "B2", status: "disponivel" }, {id: "B3", status: "disponivel" }],
+    assentos: [{ id: "B1", status: "indisponivel" }, { id: "B2", status: "indisponivel" }, {id: "B3", status: "indisponivel" },{id: "B4", status: "disponivel" },{id: "B5", status: "indisponivel" }],
   }
 ]);
 
@@ -110,7 +110,7 @@ db.sessoes.insertMany([
   {
     _id: ObjectId("66ba3a79f8d488390c5fe3c2"),
     id_filme: ObjectId("66ba3a79f8d488390c5fe3a4"), // Sem Espaço para Dados
-    id_sala: ObjectId("66ba3a79f8d488390c5fe3b3"),  // Sala 3
+    id_sala: ObjectId("66ba3a79f8d488390c5fe3b2"), // Sala 3
     horario_inicio: new Date("2025-08-13T18:00:00Z"),
     preco_ingresso: 40.00
   }
@@ -119,21 +119,21 @@ db.sessoes.insertMany([
 // Vendas
 db.vendas.insertMany([
   {
-    id_sessao: ObjectId("66ba3a79f8d488390c5fe3c0"),
+    id_sessao: ObjectId("66ba3a79f8d488390c5fe3c0"),// sala 1
     assentos_comprados: ["A1", "A2"],
     valor_total: 80.00,
     data_venda: new Date()
   },
   {
-    id_sessao: ObjectId("66ba3a79f8d488390c5fe3c1"),
+    id_sessao: ObjectId("66ba3a79f8d488390c5fe3c1"), //sala 1
     assentos_comprados: ["B5"],
     valor_total: 30.00,
     data_venda: new Date()
   },
 
   {
-    id_sessao: ObjectId("66ba3a79f8d488390c5fe3c2"),
-    assentos_comprados: ["C1", "C2", "C3"],
+    id_sessao: ObjectId("66ba3a79f8d488390c5fe3c2"),// sala 3
+    assentos_comprados: ["B1", "B2", "B3"],
     valor_total: 120.00,
     data_venda: new Date()
   }
@@ -141,7 +141,6 @@ db.vendas.insertMany([
 
 ]);
 
-print("======== CARGA INICIAL CONCLUÍDA ========");
 
 //////////// CONSULTAS
 
@@ -150,29 +149,30 @@ print("======== CARGA INICIAL CONCLUÍDA ========");
 
 db.filmes.aggregate([{$match:{duracao_min:{$gte:100}}}])
 
-//31. ADDTOSET 25. UPDATE --- COLOCANDO ANO DE LANÇAMENTO NOS FILMES
+//31. ADDTOSET 
+//25. UPDATE --- COLOCANDO ANO DE LANÇAMENTO NOS FILMES
 db.filmes.updateOne(
     { titulo: "A Vingança do NoSQL" },
-    { $addtoset: { ano_lancamento: 2020 } }
+    { $set: { ano_lancamento: 2020 } }
   );
   
   db.filmes.updateOne(
     { titulo: "Meu Primeiro Documento" },
-    { $addtoset: { ano_lancamento: 2010 } }
+    { $set: { ano_lancamento: 2010 } }
 );  
 
 db.filmes.updateOne(
     { titulo: "A Odisseia dos Índices" },  
-    { $addtoset: { ano_lancamento: 2025 } }
+    { $set: { ano_lancamento: 2025 } }
 );  
 db.filmes.updateOne(
     { titulo: "A Lenda dos SGBDS" },  
-    { $addtoset: { ano_lancamento: 2014 } }
+    { $set: { ano_lancamento: 2014 } }
 );  
 
 db.filmes.updateOne(
     { titulo: "Sem Espaço para Dados" },  
-    { $addtoset: { ano_lancamento: 2023 } }
+    { $set: { ano_lancamento: 2023 } }
 );  
 
 
@@ -291,17 +291,17 @@ db.filmes.mapReduce(
   );
   
   // Para ver o resultado:
-db.filmes_por_diretor.find().toArray();
-
-
-// 26. SAVE (com insertone)  - Inserir filme
-db.filmes.insertOne({
-    titulo: "Salvação da Integração",
-    diretor: "Victor Luiz",
-    generos: ["Comédia", "Drama"],
-    duracao_min: 100,
-    em_cartaz: true
-});
+  db.filmes_por_diretor.find().toArray();
+  
+  
+  // 26. SAVE (com insertone)  - Inserir filme
+  db.filmes.insertOne({
+      titulo: "Salvação da Integração",
+      diretor: "Victor Luiz",
+      generos: ["Comédia", "Drama"],
+      duracao_min: 100,
+      em_cartaz: true
+  });
 
 //24. FILTER  - Listar apenas os assentos disponíveis da sala 1   
 db.salas.aggregate([
