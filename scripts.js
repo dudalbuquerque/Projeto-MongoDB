@@ -4,14 +4,11 @@
 
 
 // ================= PARTE 1: SETUP E CARGA INICIAL =================
+use('CINEMA');
 
-// --- 1. USE  ---
-// Seleciona o banco de dados 'cinemaDB, se não existir, ele sera criado
-use('cinemaDB');
 
 // Apaga o banco de dados existente para garantir um estado limpo a cada execução
 db.dropDatabase();
-use('cinemaDB');
 
 print("Banco de dados 'cinemaDB' selecionado e limpo.");
 
@@ -146,174 +143,195 @@ db.vendas.insertMany([
 
 print("======== CARGA INICIAL CONCLUÍDA ========");
 
-// =========== PARTE 2: DEMONSTRAÇÃO DOS REQUISITOS ===========
-
-//2. FIND e 30. FINDONE  - Seleção básica
-print("Todos os filmes em cartaz:");
-printjson(db.filmes.find().toArray());
-
-print("\nEncontrar uma sala específica (número 2):");
-printjson(db.salas.findOne({ numero_sala: 2 }));
+//////////// CONSULTAS
 
 
-// 3. SIZE  - Encontrar vendas com exatamente 2 ingressos 
-printjson(db.vendas.find({ assentos_comprados: { $size: 2 } }).toArray());
+//4. AGRREGATE 5. MATCH 7.GTE --- FILMES COM DURACAO MAIOR QUE 100 MINUTOS
+
+db.filmes.aggregate([{$match:{duracao_min:{$gte:100}}}])
+
+//31. ADDTOSET 25. UPDATE --- COLOCANDO ANO DE LANÇAMENTO NOS FILMES
+db.filmes.updateOne(
+    { titulo: "A Vingança do NoSQL" },
+    { $addtoset: { ano_lancamento: 2020 } }
+  );
+  
+  db.filmes.updateOne(
+    { titulo: "Meu Primeiro Documento" },
+    { $addtoset: { ano_lancamento: 2010 } }
+);  
+
+db.filmes.updateOne(
+    { titulo: "A Odisseia dos Índices" },  
+    { $addtoset: { ano_lancamento: 2025 } }
+);  
+db.filmes.updateOne(
+    { titulo: "A Lenda dos SGBDS" },  
+    { $addtoset: { ano_lancamento: 2014 } }
+);  
+
+db.filmes.updateOne(
+    { titulo: "Sem Espaço para Dados" },  
+    { $addtoset: { ano_lancamento: 2023 } }
+);  
 
 
-//4. AGGREGATE, 5. MATCH, 6. PROJECT, 7. GTE, 8. GROUP, 9. SUM, 11. MAX, 12. AVG  
-print("Relatório de vendas: agrupa as vendas por sessão, calcula o total, a média e o maior valor por sessão para filmes com duração >= 90 min.");
-const relatorioVendas = db.sessoes.aggregate([
-    { // --- 29. LOOKUP  ---
-      $lookup: { // Junta sessoes com filmes
-        from: "filmes",
-        localField: "id_filme",
-        foreignField: "_id",
-        as: "detalhes_filme"
-      }
-    },
-    { $unwind: "$detalhes_filme" },
-    { // --- 5. MATCH  e 7. GTE  ---
-      $match: { "detalhes_filme.duracao_min": { $gte: 90 } } // Filtra filmes com duração >= 90 min
-    },
-    { // --- 29. LOOKUP  ---
-      $lookup: { // Junta o resultado com vendas
-        from: "vendas",
-        localField: "_id",
-        foreignField: "id_sessao",
-        as: "vendas_sessao"
-      }
-    },
-    { // --- 8. GROUP  ---
+
+// 2.FIND 14.SORT 15. LIMIT--- ORDENAR OS FILMES EM ORDEM DECRECENTE DE ACORDO COM A DURACAO   
+db.filmes.find().sort({"duracao_min":-1}).limit(3);
+
+
+// 3.SIZE  - Encontrar vendas com exatamente 2 ingressos 
+db.vendas.find({ assentos_comprados: { $size: 2 } }).toArray();
+
+
+//20.ALL  - Encontrar filmes que são de Ação E Suspense 
+db.filmes.find({ generos: { $all: ["Ação", "Suspense"] } });
+
+//13. EXISTS  -FILMES EM CARTAZ
+db.filmes.find({ em_cartaz: { $exists: true } })
+
+
+//21.SET - Tirar um filme de cartaz 
+db.filmes.updateOne(
+    { titulo: "A Vingança do NoSQL" },  
+    { $set: { em_cartaz: false } }
+);  
+
+// 27.RENAMECOLLECTION  - Renomear 'vendas' para 'ingressos' 
+db.vendas.renameCollection("ingressos");
+
+  
+// 9. SUM --- SOMA O VALOR TOTAL ARERCADADE COM A VENDA DOS INGRESSOS DO CINEMA
+db.ingressos.aggregate([
+    {
       $group: {
-        _id: "$detalhes_filme.titulo",
-        // --- 9. SUM  ---
-        total_arrecadado: { $sum: { $sum: "$vendas_sessao.valor_total" } },
-        // --- 12. AVG  ---
-        media_por_venda: { $avg: { $sum: "$vendas_sessao.valor_total" } },
-        // --- 11. MAX  ---
-        maior_venda_registrada: { $max: { $sum: "$vendas_sessao.valor_total" } }
-      }
-    },
-    { // --- 6. PROJECT  ---
-      $project: {
-        _id: 0,
-        filme: "$_id",
-        receita_total: "$total_arrecadado",
-        outros_stats: {
-            media: "$media_por_venda",
-            maior_venda: "$maior_venda_registrada"
-        }
+        _id: null,
+        total_arrecadado: { $sum: "$valor_total" }
       }
     }
-]).toArray();
-printjson(relatorioVendas);
+  ]);
 
 
-//10. COUNT  (countDocuments) - Contar salas em manutenção
-const salasManutencao = db.salas.countDocuments({ em_manutencao: true });
-print(`Número de salas em manutenção: ${salasManutencao}`);
+// 19.PRETTY - FORMATA A SAIDA
+db.filmes.find().pretty()
 
 
-//13. EXISTS  - Encontrar salas que já tiveram manutenção
-printjson(db.salas.find({ historico_manutencao: { $exists: true } }).toArray());
+//10. COUNT  - CONTAR SALAS EM MANUTENÇÃO
+db.salas.countDocuments({ em_manutencao: true });
 
 
-//14. SORT e 15. LIMIT  - Listar os 2 filmes mais longos
-printjson(db.filmes.find().sort({ duracao_min: -1 }).limit(2).toArray());
+// 30.FINDONE --- RETORNA PRIMEIRO FILME QUE TEM MARIA COMO DIRETORA
+db.filmes.findOne({ diretor: "Maria Souza" })
 
 
-//16. $WHERE  - Encontrar filmes onde o título é mais curto que a sinopse (USAR COM CUIDADO) 
-printjson(db.filmes.find({ $where: "this.titulo.length < this.sinopse.length" }).toArray());
 
-
-//17. MAPREDUCE e 18. FUNCTION  - Calcular total de ingressos por gênero 
-const mapFunction = function() { // --- 18. FUNCTION ---
-    this.generos.forEach(genero => {
-        emit(genero, 1);
-    });
-};
-const reduceFunction = function(key, values) { // --- 18. FUNCTION ---
-    return Array.sum(values);
-};
-db.filmes.mapReduce(mapFunction, reduceFunction, { out: "total_por_genero" });
-printjson(db.total_por_genero.find().toArray());
-
-//  19. PRETTY  - Ja utilizado implicitamente com printjson, mas aqui esta um exemplo direto no shell 
-// Para ver o efeito, execute no shell: db.filmes.find().pretty()
-print("O comando db.collection.find().pretty() formata o resultado no shell. `printjson` tem efeito similar aqui.");
-
-
-//20. ALL  - Encontrar filmes que são de Ação E Suspense 
-printjson(db.filmes.find({ generos: { $all: ["Ação", "Suspense"] } }).toArray());
-
-
-//21. SET e 25. UPDATE (updateOne)  - Tirar um filme de cartaz 
-db.filmes.updateOne(
-  { titulo: "A Vingança do NoSQL" },
-  { $set: { em_cartaz: false } }
-);
-print("Filme 'A Vingança do NoSQL' atualizado. Campo 'em_cartaz' agora é false.");
-printjson(db.filmes.findOne({ titulo: "A Vingança do NoSQL" }));
+//16. WHERE 18.FUNCTION --- FILMES COM DURACAO MENOR 110 MINUTOS
+db.filmes.find({
+    $where: function() {
+      return this.duracao_min < 110;
+    }
+  }).toArray();
 
 
 // 22. TEXT e 23. SEARCH  - Buscar por texto na sinopse 
-db.filmes.createIndex({ sinopse: "text" });
-printjson(db.filmes.find({ $text: { $search: "banco de dados" } }).toArray());
+db.filmes.find({ $text: { $search: "banco de dados" } }).toArray();
 
 
-//24. FILTER  - Listar apenas os assentos disponíveis da sala 1 
-const assentosDisponiveis = db.salas.aggregate([
+//6.PROJECT -- MOSTRAR APENAS ALGUMAS INFORMACÕES DA SESSAO
+db.sessoes.aggregate([
+    {
+      $project: {
+        _id: 0,
+        horario_inicio: 1,
+        preco_ingresso: 1
+      }
+    }
+  ]).toArray();
+
+
+
+//8.GROUP 11.MAX -- MAIOR PREÇO POR INGRESS
+db.ingressos.aggregate([
+    {
+    $group: {
+        _id: "$id_sessao",           // Agrupa por id da sessão
+        total_ingressos: { $sum: { $size: "$assentos_comprados" } }  // Soma a quantidade de assentos comprados por venda
+    }
+    }
+]).toArray();
+
+
+//12.AVG-- RETORNA O PREÇO MEDIO DOS INGRESSOS VENDIDOS NO CINEMA
+db.sessoes.aggregate([
+    {
+      $group: {
+        _id: null,                   // Agrupa todos juntos
+        preco_medio: { $avg: "$preco_ingresso" }  // Calcula a média do preço
+      }
+    }
+]).toArray();
+
+
+
+//17.MAPREDUCE para contar quantos filmes existem por cada diretor na coleção filmes
+
+const mapFunction = function() {
+    emit(this.diretor, 1);  // Para cada documento, emite o diretor com valor 1
+  };
+  
+const reduceFunction = function(key, values) {
+    return Array.sum(values);  // Soma os valores para cada diretor
+  };
+  
+db.filmes.mapReduce(
+    mapFunction,
+    reduceFunction,
+    { out: "filmes_por_diretor" }  // Resultado armazenado nessa coleção
+  );
+  
+  // Para ver o resultado:
+db.filmes_por_diretor.find().toArray();
+
+
+// 26. SAVE (com insertone)  - Inserir filme
+db.filmes.insertOne({
+    titulo: "Salvação da Integração",
+    diretor: "Victor Luiz",
+    generos: ["Comédia", "Drama"],
+    duracao_min: 100,
+    em_cartaz: true
+});
+
+//24. FILTER  - Listar apenas os assentos disponíveis da sala 1   
+db.salas.aggregate([
     { $match: { numero_sala: 1 } },
     { $project: {
         _id: 0,
         assentos_disponiveis: {
             $filter: {
-               input: "$assentos",
+               input: "$assentos", 
                as: "assento",
                cond: { $eq: [ "$$assento.status", "disponivel" ] }
-            }
-        }
-    }}
-]).toArray();
-printjson(assentosDisponiveis);
+            }   
+        }    
+    }}    
+]).toArray();    
 
 
-// 26. SAVE (simulado com upsert)  - Inserir ou atualizar um filme 
-// O método save() é obsoleto. A funcionalidade é simulada com updateOne e a opção upsert: true.
-db.filmes.updateOne(
-  { titulo: "A Lenda do Json" },
-  { $set: { diretor: "Anônimo", generos: ["Fantasia"], duracao_min: 80, em_cartaz: true } },
-  { upsert: true }
-);
-print("Executado 'save' para 'A Lenda do Json'. Documento inserido ou atualizado.");
-printjson(db.filmes.find({ titulo: "A Lenda do Json" }).toArray());
 
-
-// 27. RENAMECOLLECTION  - Renomear 'vendas' para 'ingressos' 
-db.vendas.renameCollection("ingressos");
-print("Coleção 'vendas' renomeada para 'ingressos'. Verificando se a nova coleção existe:");
-print(db.getCollectionNames());
 
 //28. COND  - Classificar filmes como 'Longo' ou 'Normal'
 const filmesClassificados = db.filmes.aggregate([
   {
     $project: {
-      _id: 0,
+      _id: 0,  
       titulo: 1,
       classificacao_duracao: {
-        $cond: { if: { $gt: ["$duracao_min", 120] }, then: "Longo", else: "Normal" }
-      }
-    }
-  }
-]).toArray();
+        $cond: { if: { $gt: ["$duracao_min", 120] }, then: "Longo", else: "Normal" }  
+      }  
+    }  
+  }  
+]).toArray();  
 printjson(filmesClassificados);
 
-//31. ADDTOSET  - Adicionar um gênero a um filme, sem duplicar 
-db.filmes.updateOne(
-  { titulo: "A Odisseia dos Índices" },
-  { $addToSet: { generos: "História" } }
-);
-print("Adicionado o gênero 'História' ao filme 'A Odisseia dos Índices'.");
-printjson(db.filmes.findOne({ titulo: "A Odisseia dos Índices" }));
-
-print("DEMONSTRAÇÃO DOS REQUISITOS CONCLUÍDA");
