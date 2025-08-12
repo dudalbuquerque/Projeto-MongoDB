@@ -235,6 +235,7 @@ db.filmes.find({
 
 
 // 22. TEXT e 23. SEARCH  - Buscar por texto na sinopse 
+db.filmes.createIndex({ sinopse: "text" });//fica masi rápido
 db.filmes.find({ $text: { $search: "banco de dados" } }).toArray();
 
 
@@ -294,35 +295,47 @@ db.filmes.mapReduce(
   db.filmes_por_diretor.find().toArray();
   
   
-  // 26. SAVE (com insertone)  - Inserir filme
-  db.filmes.insertOne({
-      titulo: "Salvação da Integração",
-      diretor: "Victor Luiz",
-      generos: ["Comédia", "Drama"],
-      duracao_min: 100,
-      em_cartaz: true
-  });
+// 26. SAVE (com insertone)  - Inserir filme
+db.filmes.insertOne({
+    titulo: "Salvação da Integração",
+    diretor: "Victor Luiz",
+    generos: ["Comédia", "Drama"],
+    duracao_min: 100,
+    em_cartaz: true
+});
 
-//24. FILTER  - Listar apenas os assentos disponíveis da sala 1   
+//31. ADDTOSET --- adicionar genero em lista de generos
+db.filmes.updateOne(
+    { titulo: "Meu Primeiro Documento" },
+    { $addToSet: { generos: "Romance" } } // adiciona "Romance" se não existir
+  );
+
+
+
+
+//24. FILTER  - Listar apenas os assentos disponíveis 
 db.salas.aggregate([
-    { $match: { numero_sala: 1 } },
-    { $project: {
+    {
+      $project: {
         _id: 0,
+        numero_sala: 1,
         assentos_disponiveis: {
-            $filter: {
-               input: "$assentos", 
-               as: "assento",
-               cond: { $eq: [ "$$assento.status", "disponivel" ] }
-            }   
-        }    
-    }}    
-]).toArray();    
+          $filter: {
+            input: "$assentos",
+            as: "assento",
+            cond: { $eq: ["$$assento.status", "disponivel"] }
+          }
+        }
+      }
+    }
+  ]).toArray();
+  
 
 
 
 
 //28. COND  - Classificar filmes como 'Longo' ou 'Normal'
-const filmesClassificados = db.filmes.aggregate([
+db.filmes.aggregate([
   {
     $project: {
       _id: 0,  
@@ -333,5 +346,45 @@ const filmesClassificados = db.filmes.aggregate([
     }  
   }  
 ]).toArray();  
-printjson(filmesClassificados);
+
+
+//29.LOOKUP
+db.sessoes.aggregate([
+    {
+      $lookup: {
+        from: "filmes",          // coleção para juntar
+        localField: "id_filme",  
+        foreignField: "_id",     
+        as: "info_filme"         
+      }
+    },
+    {
+      $lookup: {
+        from: "salas",
+        localField: "id_sala",
+        foreignField: "_id",
+        as: "info_sala"
+      }
+    },
+
+    // Para facilitar a leitura, desestruturamos os arrays info_filme e info_sala, que têm um único elemento
+    {
+      $unwind: "$info_filme"
+    },
+    {
+      $unwind: "$info_sala"
+    },
+    {
+      $project: {
+        _id: 0,
+        horario_inicio: 1,
+        preco_ingresso: 1,
+        "filme_titulo": "$info_filme.titulo",
+        "filme_diretor": "$info_filme.diretor",
+        "sala_numero": "$info_sala.numero_sala",
+        "sala_capacidade": "$info_sala.capacidade"
+      }
+    }
+  ]).toArray()
+
 
