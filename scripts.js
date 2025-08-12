@@ -70,7 +70,7 @@ db.salas.insertMany([
     numero_sala: 1,
     capacidade: 150,
     recursos: ["3D", "Som Dolby Atmos"],
-    assentos: [{ id: "A1", status: "indisponivel" }, { id: "A2", status: "indisponivel" },{ id: "A3", status: "disponivel" },{ id: "A4", status: "disponivel" },{ id: "A5", status: "disponivel" }]
+    assentos: [{ id: "A1", status: "indisponivel" }, { id: "A2", status: "indisponivel" },{ id: "A3", status: "disponivel" },{ id: "A4", status: "disponivel" },{ id: "A5", status: "indisponivel" }]
   },
   {
     _id: ObjectId("66ba3a79f8d488390c5fe3b1"),
@@ -86,7 +86,7 @@ db.salas.insertMany([
     numero_sala: 3,
     capacidade: 100,
     recursos: ["IMAX", "Som Dolby Atmos"],
-    assentos: [{ id: "B1", status: "indisponivel" }, { id: "B2", status: "indisponivel" }, {id: "B3", status: "indisponivel" },{id: "B4", status: "disponivel" },{id: "B5", status: "indisponivel" }],
+    assentos: [{ id: "B1", status: "indisponivel" }, { id: "B2", status: "indisponivel" }, {id: "B3", status: "indisponivel" },{id: "B4", status: "disponivel" },{id: "B5", status: "disponivel" }],
   }
 ]);
 
@@ -126,7 +126,7 @@ db.vendas.insertMany([
   },
   {
     id_sessao: ObjectId("66ba3a79f8d488390c5fe3c1"), //sala 1
-    assentos_comprados: ["B5"],
+    assentos_comprados: ["A5"],
     valor_total: 30.00,
     data_venda: new Date()
   },
