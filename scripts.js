@@ -212,7 +212,7 @@ CONSULTA DE BUSCA SIMPLES
 */
 
 
-print("\n========== 2.2: CONSULTAS DE BUSCA SIMPLES ==========");
+print("\n========== CONSULTAS DE BUSCA SIMPLES ==========");
 
 // 2.FIND 14.SORT 15. LIMIT--- ORDENAR OS FILMES EM ORDEM DECRECENTE DE ACORDO COM A DURACAO  
 print("\n--- 2, 14, 15. FIND/SORT/LIMIT: Ordenar os 3 filmes com maior duração ---"); 
@@ -258,7 +258,7 @@ CONSULTAS DE AGREGAÇÃO
 */
 
 
-print("\n========== 2.3: CONSULTAS DE AGREGAÇÃO ==========");
+print("\n========== CONSULTAS DE AGREGAÇÃO ==========");
 
 //4. AGRREGATE 5. MATCH 7.GTE --- FILMES COM DURACAO MAIOR QUE 100 MINUTOS
 
