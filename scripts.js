@@ -1,4 +1,3 @@
-
 //Arquivo de Scripts - Projeto MongoDB 2025.1              
 //Tema: Gerenciamento de Cinema                            
 
@@ -10,7 +9,7 @@ use('CINEMA');
 // Apaga o banco de dados existente para garantir um estado limpo a cada execução
 db.dropDatabase();
 
-print("Banco de dados 'cinemaDB' selecionado e limpo.");
+print("Banco de dados 'CINEMA' selecionado e limpo.");
 
 // --- INSERÇÃO DE DADOS ---
 // Inserção de dados nas coleções para popular o banco.
@@ -156,7 +155,7 @@ db.filmes.updateOne(
     { $set: { ano_lancamento: 2020 } }
   );
   
-  db.filmes.updateOne(
+db.filmes.updateOne(
     { titulo: "Meu Primeiro Documento" },
     { $set: { ano_lancamento: 2010 } }
 );  
@@ -252,7 +251,7 @@ db.sessoes.aggregate([
 
 
 
-//8.GROUP 11.MAX -- MAIOR PREÇO POR INGRESSO
+//8.GROUP 
 db.ingressos.aggregate([
     {
     $group: {
@@ -260,6 +259,16 @@ db.ingressos.aggregate([
         total_ingressos: { $sum: { $size: "$assentos_comprados" } }  // Soma a quantidade de assentos comprados por venda
     }
     }
+]).toArray();
+
+// 11. MAX - Encontrar o maior valor de venda registrado em uma unica transação
+db.ingressos.aggregate([
+  {
+    $group: {
+      _id: null, // Agrupa todos os documentos
+      maior_valor_venda: { $max: "$valor_total" } // Encontra o valor maximo no campo valor_total
+    }
+  }
 ]).toArray();
 
 
@@ -384,5 +393,3 @@ db.sessoes.aggregate([
       }
     }
   ]).toArray()
-
-
