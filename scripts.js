@@ -1,5 +1,5 @@
-//Arquivo de Scripts - Projeto MongoDB 2025.1              
-//Tema: Gerenciamento de Cinema                            
+// Arquivo de Scripts - Projeto MongoDB 2025.1              
+// Tema: Gerenciamento de Cinema                            
 
 
 // ================= PARTE 1: SETUP E CARGA INICIAL =================
@@ -13,6 +13,7 @@ print("Banco de dados 'CINEMA' selecionado e limpo.");
 
 // --- INSERÇÃO DE DADOS ---
 // Inserção de dados nas coleções para popular o banco.
+print("Inserindo dados iniciais...");
 
 // Filmes
 db.filmes.insertMany([
@@ -140,16 +141,21 @@ db.vendas.insertMany([
 
 ]);
 
+print("Dados iniciais inseridos com sucesso")
 
 //////////// CONSULTAS
 
+/*
+--------------------
+MANIPULAÇÃO DE DADOS
+--------------------
+*/
 
-//4. AGRREGATE 5. MATCH 7.GTE --- FILMES COM DURACAO MAIOR QUE 100 MINUTOS
-
-db.filmes.aggregate([{$match:{duracao_min:{$gte:100}}}])
-
+print("\n======== MANIPULAÇÃO DE DADOS ========");
 
 //25. UPDATE --- COLOCANDO ANO DE LANÇAMENTO NOS FILMES
+print("\n--- 25. UPDATE: Atualizando ano de lançamento dos filmes ---");
+
 db.filmes.updateOne(
     { titulo: "A Vingança do NoSQL" },
     { $set: { ano_lancamento: 2020 } }
@@ -174,222 +180,139 @@ db.filmes.updateOne(
     { $set: { ano_lancamento: 2023 } }
 );  
 
-
-
-// 2.FIND 14.SORT 15. LIMIT--- ORDENAR OS FILMES EM ORDEM DECRECENTE DE ACORDO COM A DURACAO   
-db.filmes.find().sort({"duracao_min":-1}).limit(3);
-
-
-// 3.SIZE  - Encontrar vendas com exatamente 2 ingressos 
-db.vendas.find({ assentos_comprados: { $size: 2 } }).toArray();
-
-
-//20.ALL  - Encontrar filmes que são de Ação E Suspense 
-db.filmes.find({ generos: { $all: ["Ação", "Suspense"] } });
-
-//13. EXISTS  -FILMES EM CARTAZ
-db.filmes.find({ em_cartaz: { $exists: true } })
-
+print("Anos de lançamento atualizados");
 
 //21.SET - Tirar um filme de cartaz 
-db.filmes.updateOne(
-    { titulo: "A Vingança do NoSQL" },  
-    { $set: { em_cartaz: false } }
-);  
+print("\n--- 21. SET: Tirando um filme de cartaz ---");
+printjson(db.filmes.updateOne( { titulo: "A Vingança do NoSQL" }, { $set: { em_cartaz: false } } )); 
 
 // 27.RENAMECOLLECTION  - Renomear 'vendas' para 'ingressos' 
+print("\n--- 27. RENAMECOLLECTION: Renomeando coleção 'vendas' para 'ingressos' ---");
 db.vendas.renameCollection("ingressos");
+print("Coleção 'vendas' renomeada para 'ingressos'.");
 
-  
+// 26. SAVE (com insertOne) - Inserir filme
+print("\n--- 26. INSERT: Inserindo um novo filme ('Salvação da Integração') ---");
+printjson(db.filmes.insertOne({ titulo: "Salvação da Integração", diretor: "Victor Luiz", generos: ["Comédia", "Drama"], duracao_min: 100, em_cartaz: true }));
+
+// 31. ADDTOSET --- adicionar genero em lista de generos
+print("\n--- 31. ADDTOSET: Adicionando 'Romance' ao gênero de um filme ---");
+printjson(db.filmes.updateOne({ titulo: "Meu Primeiro Documento" }, { $addToSet: { generos: "Romance" } }));
+
+// 22. TEXT - Criar índice de texto para busca
+print("\n--- 22. CREATEINDEX: Criando índice de texto para busca na sinopse ---");
+db.filmes.createIndex({ sinopse: "text" });
+print("Índice de texto criado.");
+
+
+/*
+-------------------------
+CONSULTA DE BUSCA SIMPLES
+-------------------------
+*/
+
+
+print("\n========== 2.2: CONSULTAS DE BUSCA SIMPLES ==========");
+
+// 2.FIND 14.SORT 15. LIMIT--- ORDENAR OS FILMES EM ORDEM DECRECENTE DE ACORDO COM A DURACAO  
+print("\n--- 2, 14, 15. FIND/SORT/LIMIT: Ordenar os 3 filmes com maior duração ---"); 
+printjson(db.filmes.find().sort({"duracao_min":-1}).limit(3).toArray());
+
+// 3.SIZE  - Encontrar vendas com exatamente 2 ingressos 
+print("\n--- 3. SIZE: Vendas com exatamente 2 ingressos ---");
+printjson(db.vendas.find({ assentos_comprados: { $size: 2 } }).toArray());
+
+//20.ALL  - Encontrar filmes que são de Ação E Suspense 
+print("\n--- 20. ALL: Filmes que são de 'Ação' E 'Suspense' ---");
+printjson(db.filmes.find({ generos: { $all: ["Ação", "Suspense"] } }).toArray());
+
+//13. EXISTS  -FILMES EM CARTAZ
+print("\n--- 13. EXISTS: Filmes que possuem o campo 'em_cartaz' ---");
+printjson(db.filmes.find({ em_cartaz: { $exists: true } }).toArray());
+
+// 10. COUNT - CONTAR SALAS EM MANUTENÇÃO
+print("\n--- 10. COUNTDOCUMENTS: Contando salas em manutenção ---");
+printjson(db.salas.countDocuments({ em_manutencao: true }));
+
+// 30. FINDONE --- RETORNA PRIMEIRO FILME QUE TEM MARIA COMO DIRETORA
+print("\n--- 30. FINDONE: Retornando o primeiro filme da diretora 'Maria Souza' ---");
+printjson(db.filmes.findOne({ diretor: "Maria Souza" }));
+
+// 16. WHERE 18. FUNCTION --- FILMES COM DURACAO MENOR 110 MINUTOS
+print("\n--- 16, 18. $WHERE/FUNCTION: Filmes com duração menor que 110 minutos ---");
+printjson(db.filmes.find({ $where: function() { return this.duracao_min < 110; } }).toArray());
+
+// 23. SEARCH - Buscar por texto na sinopse
+print("\n--- 23. SEARCH: Buscando por 'banco de dados' na sinopse ---");
+printjson(db.filmes.find({ $text: { $search: "banco de dados" } }).toArray());
+
+// 19. PRETTY - FORMATA A SAIDA
+print("\n--- 19. PRETTY: Listando todos os filmes ---");
+db.filmes.find().pretty();
+
+
+/*
+----------------------
+CONSULTAS DE AGREGAÇÃO
+----------------------
+*/
+
+
+print("\n========== 2.3: CONSULTAS DE AGREGAÇÃO ==========");
+
+//4. AGRREGATE 5. MATCH 7.GTE --- FILMES COM DURACAO MAIOR QUE 100 MINUTOS
+
+print("\n--- 4, 5, 7. AGGREGATE/MATCH/GTE: Filmes com duração >= 100 minutos ---");
+printjson(db.filmes.aggregate([{$match:{duracao_min:{$gte:100}}}]).toArray());
+
 // 9. SUM --- SOMA O VALOR TOTAL ARERCADADE COM A VENDA DOS INGRESSOS DO CINEMA
-db.ingressos.aggregate([
-    {
-      $group: {
-        _id: null,
-        total_arrecadado: { $sum: "$valor_total" }
-      }
-    }
-  ]);
+print("\n--- 9. SUM: Somando o valor total arrecadado com a venda dos ingressos ---");
+printjson(db.ingressos.aggregate([ { $group: { _id: null, total_arrecadado: { $sum: "$valor_total" } } } ]).toArray());
 
+// 6. PROJECT -- MOSTRAR APENAS ALGUMAS INFORMACÕES DA SESSAO
+print("\n--- 6. PROJECT: Mostrando apenas horário e preço das sessões ---");
+printjson(db.sessoes.aggregate([ { $project: { _id: 0, horario_inicio: 1, preco_ingresso: 1 } } ]).toArray());
 
-// 19.PRETTY - FORMATA A SAIDA
-db.filmes.find().pretty()
-
-
-//10. COUNT  - CONTAR SALAS EM MANUTENÇÃO
-db.salas.countDocuments({ em_manutencao: true });
-
-
-// 30.FINDONE --- RETORNA PRIMEIRO FILME QUE TEM MARIA COMO DIRETORA
-db.filmes.findOne({ diretor: "Maria Souza" })
-
-
-
-//16. WHERE 18.FUNCTION --- FILMES COM DURACAO MENOR 110 MINUTOS
-db.filmes.find({
-    $where: function() {
-      return this.duracao_min < 110;
-    }
-  }).toArray();
-
-
-// 22. TEXT e 23. SEARCH  - Buscar por texto na sinopse 
-db.filmes.createIndex({ sinopse: "text" });//fica masi rápido
-db.filmes.find({ $text: { $search: "banco de dados" } }).toArray();
-
-
-//6.PROJECT -- MOSTRAR APENAS ALGUMAS INFORMACÕES DA SESSAO
-db.sessoes.aggregate([
-    {
-      $project: {
-        _id: 0,
-        horario_inicio: 1,
-        preco_ingresso: 1
-      }
-    }
-  ]).toArray();
-
-
-
-//8.GROUP 
-db.ingressos.aggregate([
-    {
-    $group: {
-        _id: "$id_sessao",           // Agrupa por id da sessão
-        total_ingressos: { $sum: { $size: "$assentos_comprados" } }  // Soma a quantidade de assentos comprados por venda
-    }
-    }
-]).toArray();
+// 8. GROUP 
+print("\n--- 8. GROUP: Agrupando para contar total de ingressos por sessão ---");
+printjson(db.ingressos.aggregate([ { $group: { _id: "$id_sessao", total_ingressos: { $sum: { $size: "$assentos_comprados" } } } } ]).toArray());
 
 // 11. MAX - Encontrar o maior valor de venda registrado em uma unica transação
-db.ingressos.aggregate([
-  {
-    $group: {
-      _id: null, // Agrupa todos os documentos
-      maior_valor_venda: { $max: "$valor_total" } // Encontra o valor maximo no campo valor_total
-    }
-  }
-]).toArray();
+print("\n--- 11. MAX: Encontrando o maior valor de venda única ---");
+printjson(db.ingressos.aggregate([ { $group: { _id: null, maior_valor_venda: { $max: "$valor_total" } } } ]).toArray());
+
+// 12. AVG -- RETORNA O PREÇO MEDIO DOS INGRESSOS VENDIDOS NO CINEMA
+print("\n--- 12. AVG: Calculando o preço médio dos ingressos ---");
+printjson(db.sessoes.aggregate([ { $group: { _id: null, preco_medio: { $avg: "$preco_ingresso" } } } ]).toArray());
+
+// 17. MAPREDUCE para contar quantos filmes existem por cada diretor na coleção filmes
+print("\n--- 17. MAPREDUCE: Contando filmes por diretor ---");
+const mapFunction = function() { emit(this.diretor, 1); };
+const reduceFunction = function(key, values) { return Array.sum(values); };
+db.filmes.mapReduce(mapFunction, reduceFunction, { out: "filmes_por_diretor" });
+print("MapReduce executado. O resultado foi salvo na coleção 'filmes_por_diretor'.");
+print("--- Visualizando o resultado do MapReduce ---");
+printjson(db.filmes_por_diretor.find().toArray());
 
 
-//12.AVG-- RETORNA O PREÇO MEDIO DOS INGRESSOS VENDIDOS NO CINEMA
-db.sessoes.aggregate([
-    {
-      $group: {
-        _id: null,                   // Agrupa todos juntos
-        preco_medio: { $avg: "$preco_ingresso" }  // Calcula a média do preço
-      }
-    }
-]).toArray();
+// 24. FILTER - Listar apenas os assentos disponíveis
+print("\n--- 24. FILTER: Listando apenas os assentos disponíveis de cada sala ---");
+printjson(db.salas.aggregate([ { $project: { _id: 0, numero_sala: 1, assentos_disponiveis: { $filter: { input: "$assentos", as: "assento", cond: { $eq: ["$$assento.status", "disponivel"] } } } } } ]).toArray());
+
+// 28. COND - Classificar filmes como 'Longo' ou 'Normal'
+print("\n--- 28. COND: Classificando filmes como 'Longo' ou 'Normal' ---");
+printjson(db.filmes.aggregate([ { $project: { _id: 0, titulo: 1, classificacao_duracao: { $cond: { if: { $gt: ["$duracao_min", 120] }, then: "Longo", else: "Normal" } } } } ]).toArray());
+
+// 29. LOOKUP -- juntar informaçoes da sessão, filme e sala
+print("\n--- 29. LOOKUP: Juntando informações de sessões, filmes e salas ---");
+printjson(db.sessoes.aggregate([
+  { $lookup: { from: "filmes", localField: "id_filme", foreignField: "_id", as: "info_filme" } },
+  { $lookup: { from: "salas", localField: "id_sala", foreignField: "_id", as: "info_sala" } },
+  { $unwind: "$info_filme" }, { $unwind: "$info_sala" },
+  { $project: { _id: 0, horario_inicio: 1, preco_ingresso: 1, "filme_titulo": "$info_filme.titulo", "filme_diretor": "$info_filme.diretor", "sala_numero": "$info_sala.numero_sala", "sala_capacidade": "$info_sala.capacidade" } }
+]).toArray());
 
 
+print("\n========== FIM DAS CONSULTAS ==========");
 
-//17.MAPREDUCE para contar quantos filmes existem por cada diretor na coleção filmes
-
-const mapFunction = function() {
-    emit(this.diretor, 1);  // Para cada documento, emite o diretor com valor 1
-  };
-  
-const reduceFunction = function(key, values) {
-    return Array.sum(values);  // Soma os valores para cada diretor
-  };
-  
-db.filmes.mapReduce(
-    mapFunction,
-    reduceFunction,
-    { out: "filmes_por_diretor" }  // Resultado armazenado nessa coleção
-  );
-  
-  // Para ver o resultado:
-  db.filmes_por_diretor.find().toArray();
-  
-  
-// 26. SAVE (com insertone)  - Inserir filme
-db.filmes.insertOne({
-    titulo: "Salvação da Integração",
-    diretor: "Victor Luiz",
-    generos: ["Comédia", "Drama"],
-    duracao_min: 100,
-    em_cartaz: true
-});
-
-//31. ADDTOSET --- adicionar genero em lista de generos
-db.filmes.updateOne(
-    { titulo: "Meu Primeiro Documento" },
-    { $addToSet: { generos: "Romance" } } // adiciona "Romance" se não existir
-  );
-
-
-//24. FILTER  - Listar apenas os assentos disponíveis 
-db.salas.aggregate([
-    {
-      $project: {
-        _id: 0,
-        numero_sala: 1,
-        assentos_disponiveis: {
-          $filter: {
-            input: "$assentos",
-            as: "assento",
-            cond: { $eq: ["$$assento.status", "disponivel"] }
-          }
-        }
-      }
-    }
-  ]).toArray();
-  
-
-
-
-
-//28. COND  - Classificar filmes como 'Longo' ou 'Normal'
-db.filmes.aggregate([
-  {
-    $project: {
-      _id: 0,  
-      titulo: 1,
-      classificacao_duracao: {
-        $cond: { if: { $gt: ["$duracao_min", 120] }, then: "Longo", else: "Normal" }  
-      }  
-    }  
-  }  
-]).toArray();  
-
-
-//29.LOOKUP -- juntar informaçoes da sessão, filme e sala 
-db.sessoes.aggregate([
-    {
-      $lookup: {
-        from: "filmes",          // coleção para juntar
-        localField: "id_filme",  
-        foreignField: "_id",     
-        as: "info_filme"         
-      }
-    },
-    {
-      $lookup: {
-        from: "salas",
-        localField: "id_sala",
-        foreignField: "_id",
-        as: "info_sala"
-      }
-    },
-
-    // Para facilitar a leitura, desestruturamos os arrays info_filme e info_sala, que têm um único elemento
-    {
-      $unwind: "$info_filme"
-    },
-    {
-      $unwind: "$info_sala"
-    },
-    {
-      $project: {
-        _id: 0,
-        horario_inicio: 1,
-        preco_ingresso: 1,
-        "filme_titulo": "$info_filme.titulo",
-        "filme_diretor": "$info_filme.diretor",
-        "sala_numero": "$info_sala.numero_sala",
-        "sala_capacidade": "$info_sala.capacidade"
-      }
-    }
-  ]).toArray()
+// -------------FIM---------------
