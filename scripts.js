@@ -199,11 +199,6 @@ printjson(db.filmes.insertOne({ titulo: "Salvação da Integração", diretor: "
 print("\n--- 31. ADDTOSET: Adicionando 'Romance' ao gênero de um filme ---");
 printjson(db.filmes.updateOne({ titulo: "Meu Primeiro Documento" }, { $addToSet: { generos: "Romance" } }));
 
-// 22. TEXT - Criar índice de texto para busca
-print("\n--- 22. CREATEINDEX: Criando índice de texto para busca na sinopse ---");
-db.filmes.createIndex({ sinopse: "text" });
-print("Índice de texto criado.");
-
 
 /*
 -------------------------
@@ -242,7 +237,11 @@ printjson(db.filmes.findOne({ diretor: "Maria Souza" }));
 print("\n--- 16, 18. $WHERE/FUNCTION: Filmes com duração menor que 110 minutos ---");
 printjson(db.filmes.find({ $where: function() { return this.duracao_min < 110; } }).toArray());
 
-// 23. SEARCH - Buscar por texto na sinopse
+// 22. TEXT - Criar índice de texto para busca 23. SEARCH - Buscar por texto na sinopse
+print("\n--- 22. CREATEINDEX: Criando índice de texto para busca na sinopse ---");
+db.filmes.createIndex({ sinopse: "text" });
+print("Índice de texto criado.");
+
 print("\n--- 23. SEARCH: Buscando por 'banco de dados' na sinopse ---");
 printjson(db.filmes.find({ $text: { $search: "banco de dados" } }).toArray());
 
